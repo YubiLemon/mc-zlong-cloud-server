@@ -5,7 +5,7 @@ title 마인크래프트 서버 접속기 v1.1
 :: 1. 자동 업데이트 체크 (GitHub 등에 올린 버전 파일과 비교)
 set "current_ver=1.2.0"
 set "https://github.com/YubiLemon/mc-zlong-cloud-server/blob/main/version.txt"
-set "download_url=https://raw.githubusercontent.com/사용자명/저장소/main/서버접속.bat"
+set "https://github.com/YubiLemon/mc-zlong-cloud-server/blob/main/zlong%EC%84%9C%EB%B2%84%20%EC%A0%91%EC%86%8D1.2.0.bat"
 
 powershell -Command "$v = Invoke-WebRequest -Uri '%ver_url%' -UseBasicParsing; if ($v.Content.Trim() -ne '%current_ver%') { exit 1 } else { exit 0 }"
 if %errorlevel% equ 1 (
@@ -51,3 +51,4 @@ echo  접속 기록이 서버 주인에게 전달되었습니다.
 echo --------------------------------------------------
 
 pause > nul
+
