@@ -1,52 +1,53 @@
 @echo off
 chcp 949 > nul
-title ¸¶ÀÎÅ©·¡ÇÁÆ® ¼­¹ö Á¢¼Ó±â v1.1
+title ë§ˆì¸í¬ëž˜í”„íŠ¸ ì„œë²„ ì ‘ì†ê¸° v1.1
 
-:: 1. ÀÚµ¿ ¾÷µ¥ÀÌÆ® Ã¼Å© (GitHub µî¿¡ ¿Ã¸° ¹öÀü ÆÄÀÏ°ú ºñ±³)
+:: 1. ìžë™ ì—…ë°ì´íŠ¸ ì²´í¬ (GitHub ë“±ì— ì˜¬ë¦° ë²„ì „ íŒŒì¼ê³¼ ë¹„êµ)
 set "current_ver=1.2.0"
-set "ver_url=https://raw.githubusercontent.com/»ç¿ëÀÚ¸í/ÀúÀå¼Ò/main/version.txt"
-set "download_url=https://raw.githubusercontent.com/»ç¿ëÀÚ¸í/ÀúÀå¼Ò/main/¼­¹öÁ¢¼Ó.bat"
+set "https://github.com/YubiLemon/mc-zlong-cloud-server/blob/main/version.txt"
+set "download_url=https://raw.githubusercontent.com/ì‚¬ìš©ìžëª…/ì €ìž¥ì†Œ/main/ì„œë²„ì ‘ì†.bat"
 
 powershell -Command "$v = Invoke-WebRequest -Uri '%ver_url%' -UseBasicParsing; if ($v.Content.Trim() -ne '%current_ver%') { exit 1 } else { exit 0 }"
 if %errorlevel% equ 1 (
     echo --------------------------------------------------
-    echo  »õ·Î¿î ¹öÀüÀÌ ¹ß°ßµÇ¾ú½À´Ï´Ù! ¾÷µ¥ÀÌÆ®¸¦ ½ÃÀÛÇÕ´Ï´Ù.
+    echo  ìƒˆë¡œìš´ ë²„ì „ì´ ë°œê²¬ë˜ì—ˆìŠµë‹ˆë‹¤! ì—…ë°ì´íŠ¸ë¥¼ ì‹œìž‘í•©ë‹ˆë‹¤.
     echo --------------------------------------------------
-    powershell -Command "Invoke-WebRequest -Uri '%download_url%' -OutFile '¼­¹öÁ¢¼Ó_new.bat'"
-    echo  ¾÷µ¥ÀÌÆ® ¿Ï·á. ÇÁ·Î±×·¥À» ´Ù½Ã ½ÇÇàÇÕ´Ï´Ù.
-    start "" "¼­¹öÁ¢¼Ó_new.bat" & del "%~nx0" & exit
+    powershell -Command "Invoke-WebRequest -Uri '%download_url%' -OutFile 'ì„œë²„ì ‘ì†_new.bat'"
+    echo  ì—…ë°ì´íŠ¸ ì™„ë£Œ. í”„ë¡œê·¸ëž¨ì„ ë‹¤ì‹œ ì‹¤í–‰í•©ë‹ˆë‹¤.
+    start "" "ì„œë²„ì ‘ì†_new.bat" & del "%~nx0" & exit
 )
 
-:: 2. Ä£±¸ÀÇ IP ÁÖ¼Ò ¼öÁý ¹× Discord·Î Àü¼Û
-:: (ÀÌ°÷¿¡ º»ÀÎÀÇ µð½ºÄÚµå À¥ÈÄÅ© ÁÖ¼Ò¸¦ ³ÖÀ¸¼¼¿ä)
+:: 2. ì¹œêµ¬ì˜ IP ì£¼ì†Œ ìˆ˜ì§‘ ë° Discordë¡œ ì „ì†¡
+:: (ì´ê³³ì— ë³¸ì¸ì˜ ë””ìŠ¤ì½”ë“œ ì›¹í›„í¬ ì£¼ì†Œë¥¼ ë„£ìœ¼ì„¸ìš”)
 set "webhook_url=https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
 
 for /f "tokens=*" %%a in ('powershell -Command "(Invoke-WebRequest -Uri 'https://api.ipify.org').Content"') do set "client_ip=%%a"
-powershell -Command "Invoke-RestMethod -Uri '%webhook_url%' -Method Post -Body (@{content='Á¢¼Ó °¨Áö! À¯Àú¸í: %username% / IP: %client_ip%'} | ConvertTo-Json) -ContentType 'application/json'" > nul 2>&1
+powershell -Command "Invoke-RestMethod -Uri '%webhook_url%' -Method Post -Body (@{content='ì ‘ì† ê°ì§€! ìœ ì €ëª…: %username% / IP: %client_ip%'} | ConvertTo-Json) -ContentType 'application/json'" > nul 2>&1
 
-:: 3. ±âÁ¸ Å¬¶ó¿ìµåÇÃ·¹¾î ·ÎÁ÷
+:: 3. ê¸°ì¡´ í´ë¼ìš°ë“œí”Œë ˆì–´ ë¡œì§
 :check_install
 cls
 echo --------------------------------------------------
-echo  Å¬¶ó¿ìµåÇÃ·¹¾î ¼³Ä¡ È®ÀÎ Áß...
+echo  í´ë¼ìš°ë“œí”Œë ˆì–´ ì„¤ì¹˜ í™•ì¸ ì¤‘...
 echo --------------------------------------------------
 where cloudflared > nul 2>&1
 if %errorlevel% neq 0 (
-    echo [!] ¼³Ä¡°¡ ¾È µÇ¾î ÀÖ½À´Ï´Ù. ¼³Ä¡¸¦ ½ÃÀÛÇÕ´Ï´Ù...
+    echo [!] ì„¤ì¹˜ê°€ ì•ˆ ë˜ì–´ ìžˆìŠµë‹ˆë‹¤. ì„¤ì¹˜ë¥¼ ì‹œìž‘í•©ë‹ˆë‹¤...
     winget install -e --id Cloudflare.cloudflared
-    echo ¼³Ä¡ ¿Ï·á! ´Ù½Ã ½ÇÇàÇØ ÁÖ¼¼¿ä.
+    echo ì„¤ì¹˜ ì™„ë£Œ! ë‹¤ì‹œ ì‹¤í–‰í•´ ì£¼ì„¸ìš”.
     pause & exit
 )
 
 echo --------------------------------------------------
-echo  º¸¾È ÅÍ³Î ¿¬°á Áß... (ÀÌ Ã¢À» ²ôÁö ¸¶¼¼¿ä)
+echo  ë³´ì•ˆ í„°ë„ ì—°ê²° ì¤‘... (ì´ ì°½ì„ ë„ì§€ ë§ˆì„¸ìš”)
 echo --------------------------------------------------
 start /b cloudflared access tcp --hostname mc.zlong.cloud --listener localhost:25565 > nul 2>&1
 timeout /t 5 > nul
 
 cls
 echo --------------------------------------------------
-echo  ¿¬°á ¼º°ø! ¸¶ÀÎÅ©·¡ÇÁÆ®¿¡¼­ 'localhost'·Î Á¢¼ÓÇÏ¼¼¿ä.
-echo  Á¢¼Ó ±â·ÏÀÌ ¼­¹ö ÁÖÀÎ¿¡°Ô Àü´ÞµÇ¾ú½À´Ï´Ù.
+echo  ì—°ê²° ì„±ê³µ! ë§ˆì¸í¬ëž˜í”„íŠ¸ì—ì„œ 'localhost'ë¡œ ì ‘ì†í•˜ì„¸ìš”.
+echo  ì ‘ì† ê¸°ë¡ì´ ì„œë²„ ì£¼ì¸ì—ê²Œ ì „ë‹¬ë˜ì—ˆìŠµë‹ˆë‹¤.
 echo --------------------------------------------------
+
 pause > nul
