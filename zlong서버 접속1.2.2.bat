@@ -2,30 +2,49 @@
 chcp 949 > nul
 setlocal enabledelayedexpansion
 
-:: [1. ¼³Á¤]
+:: [1. ì„¤ì •]
 set "current_ver=1.2.2"
 set "ver_url=https://raw.githubusercontent.com/YubiLemon/mc-zlong-cloud-server/main/version.txt"
-:: ÁÖ¼Ò ³»ÀÇ % ±âÈ£¸¦ ¹èÄ¡ ÆÄÀÏÀÌ ¿ÀÇØÇÏÁö ¾Êµµ·Ï Ã³¸®Çß½À´Ï´Ù
+:: í•œê¸€ íŒŒì¼ëª…ì„ ì§ì ‘ ì“°ì§€ ì•Šê³  ë‹¤ìš´ë¡œë“œí•˜ë„ë¡ ìˆ˜ì •í–ˆìŠµë‹ˆë‹¤
 set "download_url=https://raw.githubusercontent.com/YubiLemon/mc-zlong-cloud-server/main/zlong%%EC%%84%%9C%%EB%%B2%%94%%20%%EC%%A0%%91%%EC%%86%%9D1.2.0.bat"
 set "webhook_url=https://discord.com/api/webhooks/1465304132624715950/KphKke96wiNvBgeF2180THVl744I7-Cyok-G2gjbI2Bg8eaO3KP6WQmX0x79PSeu4_Ov"
 
-:: [2. ¾÷µ¥ÀÌÆ® È®ÀÎ]
-echo ¾÷µ¥ÀÌÆ® È®ÀÎ Áß... (v%current_ver%)
-powershell -Command "$v = (Invoke-WebRequest -Uri '%ver_url%' -UseBasicParsing).Content.Trim(); if ($v -ne '%current_ver%') { exit 1 } else { exit 0 }"
-if %errorlevel% equ 1 (
-    echo [!] »õ ¹öÀü ¹ß°ß! ´Ù¿î·Îµå Áß...
-    powershell -Command "Invoke-WebRequest -Uri '%download_url%' -OutFile 'zlong_update.bat'"
+title zlong ì„œë²„ ì ‘ì†ê¸° v%current_ver%
+
+:: [2. ì—…ë°ì´íŠ¸ í™•ì¸]
+echo [1/3] ì—…ë°ì´íŠ¸ í™•ì¸ ì¤‘... (v%current_ver%)
+:: -UseBasicParsing ì¶”ê°€í•˜ì—¬ ë³´ì•ˆ ê²½ê³  í•´ê²°
+for /f "usebackq tokens=*" %%v in (`powershell -Command "(Invoke-WebRequest -Uri '%ver_url%' -UseBasicParsing).Content.Trim()"`) do set "latest_ver=%%v"
+
+if not "%current_ver%"=="%latest_ver%" (
+    echo [!] ìƒˆ ë²„ì „ ë°œê²¬ (!latest_ver!). ë‹¤ìš´ë¡œë“œ ì¤‘...
+    :: TLS 1.2 ê°•ì œ ë° ë³´ì•ˆ ê²½ê³  ë¬´ì‹œ ì˜µì…˜ ì¶”ê°€
+    powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri '%download_url%' -OutFile 'zlong_update.bat' -UseBasicParsing"
+    
     if exist "zlong_update.bat" (
+        echo [v] ì—…ë°ì´íŠ¸ ì™„ë£Œ! ìƒˆ ë²„ì „ì„ ì‹¤í–‰í•©ë‹ˆë‹¤.
         start "" "zlong_update.bat"
         (goto) 2>nul & del "%~nx0" & exit
+    ) else (
+        echo [!] ë‹¤ìš´ë¡œë“œ ì‹¤íŒ¨. íŒŒì¼ ì£¼ì†Œë¥¼ ë‹¤ì‹œ í™•ì¸í•´ì£¼ì„¸ìš”.
+        pause
     )
 )
 
-:: [3. IP Àü¼Û]
-echo Á¢¼Ó ±â·Ï Àü¼Û Áß...
-powershell -Command "$ip = (Invoke-WebRequest -Uri 'https://api.ipify.org').Content; $msg = @{ content = '?? Á¢¼Ó°¨Áö: %username% / IP: ' + $ip }; Invoke-RestMethod -Uri '%webhook_url%' -Method Post -Body ($msg | ConvertTo-Json) -ContentType 'application/json'" > nul 2>&1
+:: [3. IP ì „ì†¡]
+echo [2/3] ì ‘ì† ê¸°ë¡ ì „ì†¡ ì¤‘...
+for /f "usebackq tokens=*" %%a in (`powershell -Command "(Invoke-WebRequest -Uri 'https://api.ipify.org' -UseBasicParsing).Content"`) do set "client_ip=%%a"
+powershell -Command "$msg = @{ content = ' **zlong ì„œë²„ ì ‘ì†**\n- ìœ ì €: %username%\n- IP: %client_ip%' }; Invoke-RestMethod -Uri '%webhook_url%' -Method Post -Body ($msg | ConvertTo-Json) -ContentType 'application/json' -ErrorAction SilentlyContinue"
 
-:: [4. ÅÍ³Î ½ÇÇà]
+:: [4. í„°ë„ ì‹¤í–‰]
+echo [3/3] ì„œë²„ ì—°ê²° ì¤‘...
 start /b cloudflared access tcp --hostname mc.zlong.cloud --listener localhost:25565 > nul 2>&1
-echo [v] ¼­¹ö ¿¬°á ¼º°ø! localhost·Î Á¢¼ÓÇÏ¼¼¿ä.
+timeout /t 5 > nul
+
+cls
+echo ==================================================
+echo   zlong ì„œë²„ ì—°ê²° ì„±ê³µ! (v%current_ver%)
+echo ==================================================
+echo   ì ‘ì† í™•ì¸ë¨: %username% (%client_ip%)
+echo ==================================================
 pause
