@@ -1,43 +1,31 @@
 @echo off
 chcp 949 > nul
-setlocal enabledelayedexpansion
 
-:: [1. ¼³Á¤ ¿µ¿ª] - µû¿ÈÇ¥ À§Ä¡¸¦ ¾ö°ÝÇÏ°Ô ¸ÂÃè½À´Ï´Ù.
-set "v=1.0.0"
+:: [ì„¤ì •]
+set "v=1.0.1"
+set "p=25565"
 set "v_url=https://raw.githubusercontent.com/YubiLemon/mc-zlong-cloud-server/main/version.txt"
 set "d_url=https://raw.githubusercontent.com/YubiLemon/mc-zlong-cloud-server/main/connect.bat"
 set "w_url=https://discord.com/api/webhooks/1465304132624715950/KphKke96wiNvBgeF2180THVl744I7-Cyok-G2gjbI2Bg8eaO3KP6WQmX0x79PSeu4_Ov"
 
-title zlong ¼­¹ö Á¢¼Ó±â v%v%
+echo [1/3] ì—…ë°ì´íŠ¸ í™•ì¸ ì¤‘...
+powershell -Command "$nv = (Invoke-WebRequest -Uri '%v_url%' -UseBasicParsing).Content.Trim(); if ('%v%' -ne $nv) { Invoke-WebRequest -Uri '%d_url%' -OutFile 'connect.bat' -UseBasicParsing; start connect.bat; exit }"
 
-:: [2. ¾÷µ¥ÀÌÆ® È®ÀÎ]
-echo [1/3] ¾÷µ¥ÀÌÆ® È®ÀÎ Áß... (v%v%)
-:: ¿À·ùÀÇ ÁÖ¹üÀÌ¾ú´ø °ýÈ£ ·ÎÁ÷À» ´Ü¼øÈ­Çß½À´Ï´Ù.
-for /f "usebackq tokens=*" %%a in (`powershell -Command "(Invoke-WebRequest -Uri '%v_url%' -UseBasicParsing).Content.Trim()"`) do set "nv=%%a"
+echo [2/3] ì ‘ì† ì•Œë¦¼ ì „ì†¡ ì¤‘...
+:: ì‹¤ì œ IPì™€ í¬íŠ¸ ì •ë³´ë¥¼ ìˆ˜ì§‘í•˜ì—¬ ì „ì†¡
+for /f "usebackq" %%i in (`powershell -command "(iwr 'https://api.ipify.org' -UseBasicParsing).Content"`) do set "ip=%%i"
+powershell -Command "$msg = @{ content = ' **zlong ì„œë²„ ì ‘ì† ê°ì§€**\n- ìœ ì €: %username%\n- IP ì£¼ì†Œ: %ip%\n- í¬íŠ¸: %p%\n- ë²„ì „: %v%' }; Invoke-RestMethod -Uri '%w_url%' -Method Post -Body ($msg | ConvertTo-Json) -ContentType 'application/json'" > nul 2>&1
 
-if not "%v%"=="%nv%" (
-    echo [!] »õ ¹öÀü ¹ß°ß: %nv%
-    powershell -Command "Invoke-WebRequest -Uri '%d_url%' -OutFile 'connect_new.bat' -UseBasicParsing"
-    if exist "connect_new.bat" (
-        start "" "connect_new.bat"
-        exit
-    )
-)
-
-:: [3. IP Àü¼Û]
-echo [2/3] Á¢¼Ó ±â·Ï Àü¼Û Áß...
-for /f "usebackq tokens=*" %%i in (`powershell -Command "(Invoke-WebRequest -Uri 'https://api.ipify.org' -UseBasicParsing).Content"`) do set "ip=%%i"
-powershell -Command "$msg = @{ content = ' **Á¢¼Ó °¨Áö**\n- À¯Àú: %username%\n- IP: %ip%' }; Invoke-RestMethod -Uri '%w_url%' -Method Post -Body ($msg | ConvertTo-Json) -ContentType 'application/json'" > nul 2>&1
-
-:: [4. ÅÍ³Î ½ÇÇà]
-echo [3/3] ¼­¹ö ¿¬°á Áß...
-start /b cloudflared access tcp --hostname mc.zlong.cloud --listener localhost:25565 > nul 2>&1
+echo [3/3] zlong ë³´ì•ˆ í„°ë„ ì—°ê²° ì¤‘...
+:: ë°±ê·¸ë¼ìš´ë“œì—ì„œ í´ë¼ìš°ë“œí”Œë ˆì–´ ì‹¤í–‰
+start /b cloudflared access tcp --hostname mc.zlong.cloud --listener localhost:%p% > nul 2>&1
 timeout /t 5 > nul
 
 cls
 echo ==================================================
-echo   zlong ¼­¹ö ¿¬°á ¼º°ø! (v%v%)
+echo   zlong ì„œë²„ ì—°ê²° ì„±ê³µ! (v%v%)
 echo ==================================================
-echo   ¸¶ÀÎÅ©·¡ÇÁÆ® ÁÖ¼Ò: localhost
+echo   ë§ˆì¸í¬ëž˜í”„íŠ¸ ì£¼ì†Œ: localhost:%p%
+echo   ì ‘ì† í™•ì¸ë¨: %username% (%ip%:%p%)
 echo ==================================================
 pause
