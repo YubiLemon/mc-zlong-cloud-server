@@ -1,31 +1,31 @@
 @echo off
 chcp 949 > nul
 
-:: [ì„¤ì •]
+:: [¼³Á¤]
 set "v=1.0.1"
 set "p=25565"
 set "v_url=https://raw.githubusercontent.com/YubiLemon/mc-zlong-cloud-server/main/version.txt"
 set "d_url=https://raw.githubusercontent.com/YubiLemon/mc-zlong-cloud-server/main/connect.bat"
 set "w_url=https://discord.com/api/webhooks/1465304132624715950/KphKke96wiNvBgeF2180THVl744I7-Cyok-G2gjbI2Bg8eaO3KP6WQmX0x79PSeu4_Ov"
 
-echo [1/3] ì—…ë°ì´íŠ¸ í™•ì¸ ì¤‘...
+echo [1/3] ¾÷µ¥ÀÌÆ® È®ÀÎ Áß...
 powershell -Command "$nv = (Invoke-WebRequest -Uri '%v_url%' -UseBasicParsing).Content.Trim(); if ('%v%' -ne $nv) { Invoke-WebRequest -Uri '%d_url%' -OutFile 'connect.bat' -UseBasicParsing; start connect.bat; exit }"
 
-echo [2/3] ì ‘ì† ì•Œë¦¼ ì „ì†¡ ì¤‘...
-:: ì‹¤ì œ IPì™€ í¬íŠ¸ ì •ë³´ë¥¼ ìˆ˜ì§‘í•˜ì—¬ ì „ì†¡
+echo [2/3] Á¢¼Ó ¾Ë¸² Àü¼Û Áß...
+:: ½ÇÁ¦ IP¿Í Æ÷Æ® Á¤º¸¸¦ ¼öÁýÇÏ¿© Àü¼Û
 for /f "usebackq" %%i in (`powershell -command "(iwr 'https://api.ipify.org' -UseBasicParsing).Content"`) do set "ip=%%i"
-powershell -Command "$msg = @{ content = ' **zlong ì„œë²„ ì ‘ì† ê°ì§€**\n- ìœ ì €: %username%\n- IP ì£¼ì†Œ: %ip%\n- í¬íŠ¸: %p%\n- ë²„ì „: %v%' }; Invoke-RestMethod -Uri '%w_url%' -Method Post -Body ($msg | ConvertTo-Json) -ContentType 'application/json'" > nul 2>&1
+powershell -Command "$msg = @{ content = ' **zlong ¼­¹ö Á¢¼Ó °¨Áö**\n- À¯Àú: %username%\n- IP ÁÖ¼Ò: %ip%\n- Æ÷Æ®: %p%\n- ¹öÀü: %v%' }; Invoke-RestMethod -Uri '%w_url%' -Method Post -Body ($msg | ConvertTo-Json) -ContentType 'application/json'" > nul 2>&1
 
-echo [3/3] zlong ë³´ì•ˆ í„°ë„ ì—°ê²° ì¤‘...
-:: ë°±ê·¸ë¼ìš´ë“œì—ì„œ í´ë¼ìš°ë“œí”Œë ˆì–´ ì‹¤í–‰
+echo [3/3] zlong º¸¾È ÅÍ³Î ¿¬°á Áß...
+:: ¹é±×¶ó¿îµå¿¡¼­ Å¬¶ó¿ìµåÇÃ·¹¾î ½ÇÇà
 start /b cloudflared access tcp --hostname mc.zlong.cloud --listener localhost:%p% > nul 2>&1
 timeout /t 5 > nul
 
 cls
 echo ==================================================
-echo   zlong ì„œë²„ ì—°ê²° ì„±ê³µ! (v%v%)
+echo   zlong ¼­¹ö ¿¬°á ¼º°ø! (v%v%)
 echo ==================================================
-echo   ë§ˆì¸í¬ëž˜í”„íŠ¸ ì£¼ì†Œ: localhost:%p%
-echo   ì ‘ì† í™•ì¸ë¨: %username% (%ip%:%p%)
+echo   ¸¶ÀÎÅ©·¡ÇÁÆ® ÁÖ¼Ò: localhost:%p%
+echo   Á¢¼Ó È®ÀÎµÊ: %username% (%ip%:%p%)
 echo ==================================================
 pause
